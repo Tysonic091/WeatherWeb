@@ -1,0 +1,536 @@
+﻿@{
+    ViewBag.Title = "Weather App";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <title>@ViewBag.Title</title>
+    <style>
+        /* ====== BASE STYLE ====== */
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: url('images/weather-bg.jpg') no-repeat center center fixed;
+            /*            background: linear-gradient(to bottom, #3a7bd5, #3a6073);*/
+            letter-spacing: 0.3px;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: background 1s ease;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4); /* độ mờ */
+            z-index: 400; /* thấp hơn sidebar, cao hơn container */
+            display: none; /* mặc định ẩn */
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar {
+            z-index: 500;
+        }
+
+        #temperature {
+            font-family: 'Poppins', sans-serif;
+            font-size: 85px;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 1px 3px 6px rgba(0, 0, 0, 0.25);
+        }
+        /* ====== SIDEBAR ====== */
+        .menu-btn {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            width: 35px;
+            height: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+            .menu-btn span {
+                display: block;
+                height: 4px;
+                width: 100%;
+                background: #fff;
+                border-radius: 2px;
+                transition: all 0.3s ease;
+            }
+
+            .menu-btn:hover {
+                background: rgba(255,255,255,0.4);
+            }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 300px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 20px;
+            border-radius: 0 20px 20px 0;
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            z-index: 500;
+        }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+        /* Header with close button */
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-bottom: 25px;
+        }
+
+            .sidebar-header h3 {
+                font-size: 1.3rem;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin: 0;
+            }
+
+        .menu-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+
+        .menu-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        .close-sidebar {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: none;
+            font-size: 1.4rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+            .close-sidebar:hover {
+                background: rgba(255, 255, 255, 0.3);
+            }
+
+        /* ==== HIỆU ỨNG MỜ CHO NỀN KHI MỞ SIDEBAR ==== */
+        body.sidebar-open .weather-bg {
+            filter: blur(5px) brightness(0.8);
+        }
+
+        #overlay {
+            z-index: 400;
+        }
+
+        /* Search box */
+        .sidebar-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+            .sidebar-content input {
+                width: 80%;
+                padding: 10px 15px;
+                border-radius: 12px;
+                border: none;
+                background: rgba(255, 255, 255, 0.2);
+                color: #fff;
+                outline: none;
+                font-size: 1rem;
+            }
+
+                .sidebar-content input::placeholder {
+                    color: rgba(255, 255, 255, 0.6);
+                }
+
+            .sidebar-content button {
+                padding: 10px;
+                background: #007bff;
+                border: none;
+                border-radius: 12px;
+                color: #fff;
+                font-size: 1rem;
+                font-weight: 500;
+                cursor: pointer;
+                transition: background 0.3s ease;
+            }
+
+                .sidebar-content button:hover {
+                    background: #3399ff;
+                }
+
+        /* ====== SEARCH BAR ====== */
+        .search-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+        }
+
+        input[type="text"] {
+            width: 280px;
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            outline: none;
+        }
+
+        input::placeholder {
+            color: rgba(255,255,255,0.8);
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+            button:hover {
+                background: #0056b3;
+            }
+
+        /* ====== LANGUAGE SELECT ====== */
+        .lang-select {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            cursor: pointer;
+        }
+
+        /* ====== WEATHER BOX ====== */
+        .weather-box {
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 20px;
+            padding: 40px;
+            width: 380px;
+            margin: 30px auto;
+            color: #fff;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            display: none;
+        }
+
+        .weather-info p {
+            margin: 10px 0;
+            font-size: 1.05rem;
+        }
+
+        .city-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .temp-display {
+            font-size: 5rem;
+            font-weight: 600;
+            color: #fff;
+            text-align: center;
+            margin: 10px 0;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.4);
+        }
+
+
+        /* ==== NỀN ==== */
+        .weather-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: background 1s ease;
+            z-index: -1;
+        }
+
+            /* ==== GRADIENT THEO THỜI TIẾT ==== */
+            .weather-bg.sunny {
+                background-image: url('https://vnshort.com/jK5i'); /* trời nắng */
+            }
+
+            .weather-bg.cloudy {
+                background-image: url('https://vnshort.com/jK5i'); /* trời nhiều mây */
+            }
+
+            .weather-bg.rainy {
+                background-image: url('https://vnshort.com/cHnn'); /* trời nưa */
+            }
+
+            .weather-bg.night {
+                background-image: url('https://vnshort.com/jK5i'); /* trời tối */
+            }
+
+            .weather-bg.snow {
+                background-image: url('https://vnshort.com/cHnn');
+            }
+    </style>
+</head>
+
+<body>
+    <div class="weather-bg"></div>
+
+    <!-- ☰ Nút mở sidebar -->
+    <button class="menu-btn" onclick="toggleSidebar()">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            @*<button class="close-sidebar" onclick="toggleSidebar()">×</button>*@
+            <h3><i class="fa-solid fa-magnifying-glass-location"></i> Search City</h3>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="cityInput" placeholder="Enter city name..." />
+            <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+    </div>
+
+    <div id="overlay"></div>
+
+    <select id="language" class="lang-select">
+        <option value="en" selected>English</option>
+        <option value="vi">Tiếng Việt</option>
+    </select>
+
+    <div class="container">
+        <h2><i class="fa-chisel fa-regular fa-cloud"></i> Weather App</h2>
+
+        <div class="weather-box" id="weather-box">
+            <p id="city-location"></p>
+            <h3 class="city-title" id="city-name"></h3>
+            <div class="weather-info">
+                <p><strong><span id="temperature" class="temp-display">--°C</span></strong> </p>
+                <p><strong>Humidity:</strong> <span id="humidity">--%</span></p>
+                <p><strong>Weather:</strong> <span id="description">--</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = "a7ea031576be49ba557146d2491da482"; // ⚠️ thay bằng API key OpenWeather của bạn
+
+        async function getWeatherByCoords(lat, lon, lang = "en") {
+            const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=${lang}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            showWeather(data);
+        }
+
+        async function getWeatherByCity(city, lang = "en") {
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=${lang}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            showWeather(data);
+        }
+
+        function showWeather(data) {
+            if (data.cod !== 200) {
+                alert("City not found!");
+                return;
+            }
+            const countryCode = data.sys.country;
+            const countryName = countries[countryCode] || countryCode;
+
+            document.getElementById("city-name").textContent = data.name;
+            document.getElementById("city-location").textContent =
+                `${data.name},  ${countryName}`;
+            document.getElementById("temperature").textContent =
+                `${Math.round(data.main.temp)}°C`;
+            document.getElementById("humidity").textContent =
+                `${data.main.humidity}%`;
+            document.getElementById("description").textContent =
+                data.weather[0].description;
+
+            document.getElementById("weather-box").style.display = "block";
+            updateBackground(data.weather[0].main.toLowerCase());
+        }
+
+        function updateBackground(weather) {
+            const bg = document.querySelector('.weather-bg');
+            bg.className = 'weather-bg'; // reset class
+            //let gifUrl = "";
+            let gradient = "";
+
+            if (weather.includes("clear")) {
+                // trời nắng
+                //gifUrl = "url('https://vnshort.com/jK5i')";
+                gradient = "linear-gradient(to bottom, #f9d423, #ff4e50)";
+            } else if (weather.includes("cloud")) {
+                // có mây
+                //gifUrl = "url('https://vnshort.com/jK5i')";
+                gradient = "linear-gradient(to bottom, #757f9a, #d7dde8)";
+            } else if (weather.includes("rain")) {
+                // mưa
+                //gifUrl = "url('https://vnshort.com/94rK')";
+                gradient = "linear-gradient(to bottom, #4e54c8, #8f94fb)";
+            } else if (weather.includes("thunderstorm")) {
+                // giông
+                //gifUrl = "url('https://vnshort.com/jK5i')";
+                gradient = "linear-gradient(to bottom, #232526, #414345)";
+            } else if (weather.includes("snow")) {
+                // tuyết
+                //gifUrl = "url('https://vnshort.com/jK5i')";
+                gradient = "linear-gradient(to bottom, #83a4d4, #b6fbff)";
+            } else if (weather.includes("mist") || weather.includes("fog")) {
+                // sương mù
+                //gifUrl = "url('https://vnshort.com/jK5i')";
+                gradient = "linear-gradient(to bottom, #606c88, #3f4c6b)";
+            } else if (weather.includes("night")) {
+                // ban đêm
+                //gifUrl = "url('https://vnshort.com/jK5i')";
+                gradient = "linear-gradient(to bottom, #141E30, #243B55)";
+            } else {
+                // mặc định
+                //gifUrl = "url('https://vnshort.com/jK5i')";
+                gradient = "linear-gradient(to bottom, #2980b9, #6dd5fa)";
+            }
+
+            bg.style.background = gradient;
+            //bg.style.backgroundImage = gifUrl;
+            //bg.style.backgroundSize = "cover";
+            //bg.style.backgroundPosition = "center";
+            //bg.style.backgroundRepeat = "no-repeat";
+        }
+
+        const countries = {
+            "VN": "Vietnam",
+            "US": "United States",
+            "FR": "France",
+            "JP": "Japan",
+            "CN": "China",
+            "GB": "United Kingdom",
+            // thêm các quốc gia khác
+        };
+
+        // 🌍 Lấy vị trí hiện tại
+        window.onload = () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        const { latitude, longitude } = pos.coords;
+                        getWeatherByCoords(latitude, longitude);
+                    },
+                    err => {
+                        // nếu bị chặn -> load mặc định TP.HCM
+                        getWeatherByCity("Ho Chi Minh City");
+                    }
+                );
+            } else {
+                getWeatherByCity("Ho Chi Minh City");
+            }
+        };
+
+        // 🔍 Tìm kiếm thành phố
+        document.getElementById("searchBtn").addEventListener("click", () => {
+            const city = document.getElementById("cityInput").value;
+            const lang = document.getElementById("language").value;
+            if (city) {
+                getWeatherByCity(city, lang);
+                toggleSidebar(); // đóng sidebar sau khi tìm
+            }
+        });
+
+        // 🌐 Đổi ngôn ngữ
+        document.getElementById("language").addEventListener("change", () => {
+            const lang = document.getElementById("language").value;
+            const city = document.getElementById("city-name").textContent || "Ho Chi Minh City";
+            getWeatherByCity(city, lang);
+        });
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            const menuBtn = document.querySelector(".menu-btn");
+            const overlay = document.getElementById("overlay");
+            sidebar.classList.toggle("active");
+            menuBtn.classList.toggle("active");
+
+            if (sidebar.classList.contains("active")) {
+                overlay.style.display = "block"; // hiện overlay
+                document.body.classList.add("sidebar-open"); // mờ nền chính
+            } else {
+                overlay.style.display = "none"; // ẩn overlay
+                document.body.classList.remove("sidebar-open"); // bỏ mờ nền
+            }
+        }
+
+        // Click vào overlay cũng đóng sidebar
+        document.getElementById("overlay").addEventListener("click", () => {
+            toggleSidebar();
+        });
+
+        function searchFromSidebar() {
+            const city = document.getElementById("sidebarCity").value;
+            const lang = document.getElementById("language").value;
+            if (city) {
+                getWeatherByCity(city, lang);
+                toggleSidebar(); // đóng sidebar sau khi tìm
+            }
+        }
+
+    </script>
+</body>
+</html>
