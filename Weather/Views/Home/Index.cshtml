@@ -260,14 +260,20 @@
 
         /* ====== WEATHER BOX ====== */
         .weather-box {
+            position: relative;
             background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(12px);
             border-radius: 20px;
-            padding: 40px;
+            padding: 60px 20px 40px;
+            text-align: center;
             width: 380px;
+            height: auto;
+            position: relative;
             margin: 30px auto;
             color: #fff;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             display: none;
+            transition: background 0.5s ease;
         }
 
         .weather-info p {
@@ -289,6 +295,83 @@
             text-shadow: 2px 2px 10px rgba(0,0,0,0.4);
         }
 
+        /*icon 4 goc*/
+        .corner-icon {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            opacity: 0.8;
+            transition: opacity 0.5s ease, transform 0.3s ease;
+        }
+
+            .corner-icon img {
+                width: 40px;
+                height: 40px;
+                margin-bottom: 3px;
+            }
+
+        .top-left {
+            top: 10px;
+            left: 10px;
+        }
+
+        .top-right {
+            top: 10px;
+            right: 10px;
+        }
+
+        .bottom-left {
+            bottom: 10px;
+            left: 10px;
+        }
+
+        .bottom-right {
+            bottom: 10px;
+            right: 10px;
+        }
+
+        .icon-sunrise {
+            top: 10px;
+            left: 10px;
+        }
+
+        .icon-day {
+            top: 10px;
+            right: 10px;
+        }
+
+        .icon-sunset {
+            bottom: 10px;
+            right: 10px;
+        }
+
+        .icon-night {
+            bottom: 10px;
+            left: 10px;
+        }
+
+        .corner-icon.hidden {
+            opacity: 0; /* ẩn khi không cần */
+        }
+
+        .main-icon {
+            width: 100px;
+            height: 100px;
+            margin-top: 10px;
+        }
+
+        .icon-day { animation: pulse 3s infinite alternate; }
+        .icon-night { animation: glow 4s infinite alternate; }
+
+        @@keyframes pulse {
+          from { transform: scale(1); opacity: 0.9; }
+          to { transform: scale(1.1); opacity: 1; }
+        }
+
+        @@keyframes glow {
+          from { filter: brightness(0.8); }
+          to { filter: brightness(1.2); }
+        }
 
         /* ==== NỀN ==== */
         .weather-bg {
@@ -323,11 +406,96 @@
             .weather-bg.snow {
                 background-image: url('https://vnshort.com/cHnn');
             }
+
+        .temp-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .weather-icon {
+            width: 100px;
+            height: 100px;
+            display: block;
+            margin: 0 auto 10px;
+            transition: transform 0.3s ease;
+           /* object-fit: contain;
+            filter: drop-shadow(0 0 6px rgba(0,0,0,0.3));
+            animation: float 3s ease-in-out infinite;*/
+        }
+
+        #weather-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .temp-display {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 4.5rem;
+            color: #fff;
+            text-shadow: 3px 3px 15px rgba(0,0,0,0.4);
+        }
+
+        /* Icon trôi nhẹ lên xuống */
+        @@keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Thêm hiệu ứng riêng cho từng loại thời tiết nếu muốn */
+        .weather-icon.sunny {
+            animation: spin 10s linear infinite;
+        }
+
+        @@keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .weather-icon.rainy {
+            animation: rainMove 2s ease-in-out infinite;
+        }
+
+        @@keyframes rainMove {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(5px); }
+        }
+
+        .weather-clock {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 26px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
+            z-index: 10;
+        }
+
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
     </style>
 </head>
 
 <body>
-    <div class="weather-bg"></div>
 
     <!-- ☰ Nút mở sidebar -->
     <button class="menu-btn" onclick="toggleSidebar()">
@@ -356,18 +524,37 @@
         <option value="vi">Tiếng Việt</option>
     </select>
 
+    <div id="loading-screen">
+        <p>Đang tải vị trí của bạn...</p>
+    </div>
+
     <div class="container">
         <h2><i class="fa-chisel fa-regular fa-cloud"></i> Weather App</h2>
 
         <div class="weather-box" id="weather-box">
+            <div id="clock" class="weather-clock"></div>
+
+            <!-- 🌅 4 icon ở 4 góc -->
+            <img id="icon-sunrise" class="corner-icon top-left" src="~/Image/Days/sunrise.png" alt="Sunrise">
+            <img id="icon-day" class="corner-icon top-right" src="~/Image/Days/sun.png" alt="Day">
+            <img id="icon-sunset" class="corner-icon bottom-right" src="~/Image/Days/sunset.png" alt="Sunset">
+            <img id="icon-night" class="corner-icon bottom-left" src="~/Image/Days/starry-night.png" alt="Night">
+
             <p id="city-location"></p>
+
             <h3 class="city-title" id="city-name"></h3>
+
             <div class="weather-info">
-                <p><strong><span id="temperature" class="temp-display">--°C</span></strong> </p>
+                <div class="temp-wrapper">
+                    <img id="weather-icon" src="" alt="Weather Icon" class="weather-icon" />
+                    <span id="temperature" class="temp-display">--°C</span>
+                </div>
                 <p><strong>Humidity:</strong> <span id="humidity">--%</span></p>
                 <p><strong>Weather:</strong> <span id="description">--</span></p>
             </div>
         </div>
+        <div class="weather-bg"></div>
+
     </div>
 
     <script>
@@ -405,8 +592,52 @@
             document.getElementById("description").textContent =
                 data.weather[0].description;
 
+            // 🟡 Thêm icon thời tiết
+            const icon = document.getElementById("weather-icon");
+            const weatherType = data.weather[0].main.toLowerCase();
+
+            // Sử dụng icon tùy chỉnh
+            if (weatherType.includes("rain")) {
+                icon.src = "/Image/rain.png"; // icon mưa của bạn
+            } else if (weatherType.includes("clear")) {
+                icon.src = "/Image/sunlight.png";  // icon bạn vừa gửi
+            } else if (weatherType.includes("cloud")) {
+                icon.src = "/Image/overcast.png"; // icon mây
+            } else if (weatherType.includes("snow")) {
+                icon.src = "/Image/hail.png";  // icon tuyết
+            } else if (weatherType.includes("storm")) {
+                icon.src = "/Image/storm.png"; // icon sấm
+            } else {
+                icon.src = "/Image/cloudy.png"; // icon mặc định
+            }
+
             document.getElementById("weather-box").style.display = "block";
             updateBackground(data.weather[0].main.toLowerCase());
+
+            // 🌄 Xử lý hiển thị icon góc
+            const sunrise = data.sys.sunrise * 1000; // thời gian (ms)
+            const sunset = data.sys.sunset * 1000;
+            const now = Date.now();
+
+            const isDay = now > sunrise && now < sunset;
+
+            // Ẩn tất cả trước
+            ["icon-sunrise", "icon-day", "icon-sunset", "icon-night"].forEach(id => {
+                document.getElementById(id).classList.add("hidden");
+            });
+
+            // Hiển thị icon tương ứng
+            if (now < sunrise) {
+                document.getElementById("icon-night").classList.remove("hidden");
+            } else if (now >= sunrise && now < sunrise + 2 * 60 * 60 * 1000) { // 2h đầu sau bình minh
+                document.getElementById("icon-sunrise").classList.remove("hidden");
+            } else if (now >= sunrise + 2 * 60 * 60 * 1000 && now < sunset - 2 * 60 * 60 * 1000) {
+                document.getElementById("icon-day").classList.remove("hidden");
+            } else if (now >= sunset - 2 * 60 * 60 * 1000 && now < sunset) {
+                document.getElementById("icon-sunset").classList.remove("hidden");
+            } else {
+                document.getElementById("icon-night").classList.remove("hidden");
+            }
         }
 
         function updateBackground(weather) {
@@ -468,21 +699,26 @@
 
         // 🌍 Lấy vị trí hiện tại
         window.onload = () => {
+            document.getElementById("loading-screen").style.display = "flex";
+
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     pos => {
                         const { latitude, longitude } = pos.coords;
                         getWeatherByCoords(latitude, longitude);
+                        document.getElementById("loading-screen").style.display = "none";
                     },
                     err => {
-                        // nếu bị chặn -> load mặc định TP.HCM
                         getWeatherByCity("Ho Chi Minh City");
+                        document.getElementById("loading-screen").style.display = "none";
                     }
                 );
             } else {
                 getWeatherByCity("Ho Chi Minh City");
+                document.getElementById("loading-screen").style.display = "none";
             }
         };
+
 
         // 🔍 Tìm kiếm thành phố
         document.getElementById("searchBtn").addEventListener("click", () => {
@@ -530,6 +766,17 @@
                 toggleSidebar(); // đóng sidebar sau khi tìm
             }
         }
+
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            document.getElementById("clock").textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
 
     </script>
 </body>

@@ -171,6 +171,17 @@
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
+    <Content Include="Image\cloudy.png" />
+    <Content Include="Image\Days\starry-night.png" />
+    <Content Include="Image\Days\sun.png" />
+    <Content Include="Image\Days\sunrise.png" />
+    <Content Include="Image\Days\sunset.png" />
+    <Content Include="Image\hail.png" />
+    <Content Include="Image\overcast.png" />
+    <Content Include="Image\rain.png" />
+    <Content Include="Image\storm.png" />
+    <Content Include="Image\sunlight.png" />
+    <Content Include="Image\windy.png" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Areas\HelpPage\Views\Web.config" />
